@@ -1,0 +1,15 @@
+# Framework e Servidor
+fastapi
+uvicorn[standard]
+
+# Banco de Dados (PostgreSQL + ORM)
+sqlalchemy
+psycopg2-binary
+
+# Validação e Configurações
+pydantic
+pydantic-settings
+
+# Segurança (Senhas e Tokens JWT)
+passlib[bcrypt]
+python-jose[cryptography]
