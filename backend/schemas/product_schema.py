@@ -7,10 +7,11 @@ class ProductBase(BaseModel):
     price: float
 
 class ProductCreate(ProductBase):
-    pass
+    event_id: int
 
 class Product(ProductBase):
     id_product: int
+    event_id: int
 
     class Config:
         from_attributes = True
