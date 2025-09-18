@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text
+from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey
 from sqlalchemy.orm import relationship, declarative_base
 from database import Base
 
@@ -10,5 +10,8 @@ class Event(Base):
     description = Column(Text, nullable=False, index=True)
     location = Column(String, nullable=False)
     date = Column(DateTime, nullable=False)
+    
+    user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"))
+    user = relationship("User", back_populates="events")
     
     products = relationship("Product", back_populates="event", cascade="all, delete-orphan")

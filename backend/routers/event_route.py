@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from dependencies import get_db
 from models import event_model
-from schemas import event_schema
+from schemas import event_schema, product_schema
 
 NOT_FOUND = "Event Not Found"
 
@@ -33,6 +33,14 @@ def get_event_by_id(id_event: int, db: Session = Depends(get_db)):
     if not event:
         raise HTTPException(status_code=404, detail=NOT_FOUND)
     return event
+
+@router.get("/{id_event}/products", response_model=list[product_schema.Product])
+def get_products_event(id_event: int, db: Session = Depends(get_db)):
+    event = db.query(event_model.Event).filter(event_model.Event.id == id_event).first()
+    
+    if not event:
+        raise HTTPException(status_code=404, detail=NOT_FOUND)
+    return event.products
 
 @router.put("/{id_event}", response_model=event_schema.Event)
 def update_event(id_event: int, event: event_schema.EventBase, db: Session = Depends(get_db)):

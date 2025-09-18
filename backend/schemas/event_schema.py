@@ -8,7 +8,7 @@ class EventBase(BaseModel):
     description: str | None = None
     
 class EventCreate(EventBase):
-    pass
+    user_id: int
 
 class Event(EventBase):
     id: int
