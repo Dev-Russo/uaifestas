@@ -6,7 +6,7 @@ from models import user_model, sale_model
 from schemas import sale_schema
 from utils.auth_utils import get_current_user
 from utils.sale_utils import create_sale
-from utils.email_utils import send_confirmation_email_sync
+from utils.email_utils import formated_email_to_send
 import os
 
 router = APIRouter()
@@ -27,40 +27,44 @@ def create_sale_site(
 ):  
     return create_sale(db=db, sale=sale_data)
 
-@router.post("/{id_sale}", response_model=sale_schema.Sale)
+@router.post("/{id_sale}/resend", response_model=sale_schema.Sale)
 def resend_qrcode_mail(id: int, db: Session = Depends(get_db)):
     db_sale = db.query(sale_model.Sale).filter(sale_model.Sale.id == id).first()
     
     if not db_sale:
         raise HTTPException(status_code=404, detail="Sale Not Found")
     
-    try:
-        qrcode_filepath = generate_qrcode_image_in_memory(str(db_sale.unique_code))
-            
-        formatted_date = db_sale.product.event.date.strftime("%d de %B de %Y às %H:%M")
-            
-        formatted_price = f"R$ {db_sale.product.price:.2f}".replace('.', ',')
-            
-        email_data = {
-            "buyer_name": db_sale.buyer_name,
-            "event_name": db_sale.product.event.name,
-            "product_name": db_sale.product.name_product,
-            "event_date": formatted_date,
-            "event_location": db_sale.product.event.location,
-            "product_price": formatted_price
-        }
-        
-        send_confirmation_email_sync(
-            recipient_email= db_sale.buyer_email,
-            email_data=email_data,
-            qrcode_buffer= qrcode_filepath
-        )
-    except Exception as e:
-        print(f"ERRO AO ENVIAR EMAIL: {e}")
-    finally:
-        if qrcode_filepath and os.path.exists(qrcode_filepath):
-            os.remove(qrcode_filepath)
-            print(f"Arquivo temporário {qrcode_filepath} apagado.")
+    formated_email_to_send(db_sale)
 
     return db_sale    
+
+@router.put("/{id_sale}/altermail", response_model=sale_schema.Sale)
+def alter_mail_name(id: int, sale: sale_schema.SaleBase, db: Session = Depends(get_db)):
+    db_sale = db.query(sale_model.Sale).filter(sale_model.Sale.id == id).first()
     
+    if not db_sale:
+        raise HTTPException(status_code=404, detail="Sale Not Found")
+    
+    if sale.buyer_email is not None:
+        db_sale.buyer_email = sale.buyer_email
+    if sale.buyer_name is not None:
+        db_sale.buyer_name = sale.buyer_name
+    
+    formated_email_to_send(db_sale)
+    
+    db.commit()
+    db.refresh(db_sale)
+    
+    return db_sale
+
+@router.get("/", response_model=list[sale_schema.Sale])
+def get_all_sales(db: Session = Depends(get_db)):
+    sales = db.query(sale_model.Sale).all()
+    return sales
+
+@router.get("/{id_sale}", response_model=sale_schema.Sale)
+def get_sale_by_id(id_sale: int, db: Session = Depends(get_db)):    
+    sale = db.query(sale_model.Sale).filter(sale_model.Sale.id == id_sale).first()
+    if not sale:
+        raise HTTPException(status_code=404, detail="Sale Not Found")
+    return sale
