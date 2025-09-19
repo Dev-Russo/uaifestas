@@ -1,13 +1,81 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Seu Ingresso Chegou!</title>
-    </head>
-    <body>
-        <h1>Olá, {{ buyer_name }}!</h1>
-        <p>Obrigado por comprar seu ingresso!</p>
-        <p>Apresente o QR Code abaixo na entrada do evento.</p>
-        <img src="cid:qrcode_image" alt="Seu QR Code">
-        <p>Nos vemos lá!</p>
-    </body>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF--8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seu Ingresso Uai-Festas</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border-collapse: collapse; margin-top: 20px; border: 1px solid #cccccc;">
+        
+        <tr>
+            <td align="center" bgcolor="#732290" style="padding: 40px 0 30px 0; color: #ffffff; font-size: 28px; font-weight: bold;">
+                Uai-Festas - Seu Ingresso!
+            </td>
+        </tr>
+        
+        <tr>
+            <td bgcolor="#ffffff" style="padding: 40px 30px 40px 30px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                    <tr>
+                        <td style="color: #153643; font-size: 24px;">
+                            <b>Olá, {buyer_name}!</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 20px 0 30px 0; color: #153643; font-size: 16px; line-height: 20px;">
+                            Sua compra foi confirmada com sucesso! Este é o seu ingresso digital. Apresente o QR Code na entrada do evento.
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border: 1px solid #dddddd; padding: 15px;">
+                                <tr>
+                                    <td style="font-size: 18px; padding-bottom: 10px; border-bottom: 1px solid #eeeeee;" colspan="2">
+                                        <b>{event_name}</b>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px 0; color: #555555;">Ingresso:</td>
+                                    <td align="right" style="padding: 10px 0;">{product_name}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px 0; color: #555555;">Data:</td>
+                                    <td align="right" style="padding: 10px 0;">{event_date}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px 0; color: #555555;">Local:</td>
+                                    <td align="right" style="padding: 10px 0;">{event_location}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px 0; font-weight: bold; border-top: 1px solid #eeeeee;">Valor Pago:</td>
+                                    <td align="right" style="padding: 10px 0; font-weight: bold; border-top: 1px solid #eeeeee;">{product_price}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td align="center" style="padding: 30px 0 30px 0;">
+                            <img src="cid:qrcode_image" alt="Seu QR Code" width="200" height="200">
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        
+        <tr>
+            <td bgcolor="#732290" style="padding: 30px 30px 30px 30px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                    <tr>
+                        <td style="color: #ffffff; font-size: 14px;" align="center">
+                            &copy; 2025 Uai-Festas<br/>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
 </html>

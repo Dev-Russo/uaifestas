@@ -6,7 +6,7 @@ from io import BytesIO
 from config import mail_config
 
 async def send_confirmation_email_async(recipient_email: str, email_data: Dict, qrcode_filepath: str):
-    html_content = Path("templates/email_confirmation.html").read_text()
+    html_content = Path("templates/email_confirmation.html").read_text(encoding=("utf-8"))
     
     attachment = {
         "file": qrcode_filepath,  
