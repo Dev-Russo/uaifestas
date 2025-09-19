@@ -12,3 +12,4 @@ class User(Base):
     role = Column(String, nullable=False)
     
     events = relationship("Event", back_populates="user", cascade="all, delete-orphan")
+    sales = relationship("Sale", back_populates="seller")
