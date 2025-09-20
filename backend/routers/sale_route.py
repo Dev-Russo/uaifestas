@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from backend.utils.qrcode_utils import generate_qrcode_image_in_memory
+from utils.qrcode_utils import generate_qrcode_image_in_memory
 from dependencies import get_db
 from models import user_model, sale_model, product_model, event_model
 from schemas import sale_schema
