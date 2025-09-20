@@ -23,5 +23,7 @@ class Sale(Base):
     
     unique_code = Column(UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False, index=True)
     
+    checked_at = Column(DateTime, nullable=True, default=None)
+    
     product = relationship("Product", back_populates="sales")
     seller = relationship("User", back_populates="sales")

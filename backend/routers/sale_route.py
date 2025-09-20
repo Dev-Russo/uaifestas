@@ -1,12 +1,14 @@
+from datetime import date, datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from backend.utils.qrcode_utils import generate_qrcode_image_in_memory
 from dependencies import get_db
-from models import user_model, sale_model
+from models import user_model, sale_model, product_model, event_model
 from schemas import sale_schema
 from utils.auth_utils import get_current_user
 from utils.sale_utils import create_sale
 from utils.email_utils import formated_email_to_send
+from typing import Optional, List
 import os
 
 router = APIRouter()
@@ -57,9 +59,38 @@ def alter_mail_name(id: int, sale: sale_schema.SaleBase, db: Session = Depends(g
     
     return db_sale
 
-@router.get("/", response_model=list[sale_schema.Sale])
-def get_all_sales(db: Session = Depends(get_db)):
-    sales = db.query(sale_model.Sale).all()
+@router.get("/", response_model=List[sale_schema.Sale])
+def get_all_sales(
+        db: Session = Depends(get_db),
+        current_user: user_model.User = Depends(get_current_user),
+        event_id: int | None = None,
+        product_id: Optional[int] = None,
+        seller_id: Optional[int] = None,
+        skip: int = 0,
+        limit: int = 100
+    ):
+    query = db.query(sale_model.Sale)
+    if current_user.role == "commissioner":
+        query = query.filter(sale_model.Sale.seller_id == current_user.id)
+    
+    elif current_user.role == "admin":
+        admin_event_ids = [event.id for event in current_user.admin_events]
+        if not admin_event_ids:
+            return []
+        
+        query = query.join(sale_model.Sale.product).filter(product_model.Product.event_id.in_(admin_event_ids))
+        
+        if seller_id:
+            query = query.filter(sale_model.Sale.seller_id == seller_id)
+        
+    if event_id:
+        query = query.join(sale_model.Sale.product).filter(product_model.Product.event_id == event_id)
+    if product_id:
+        query = query.filter(sale_model.Sale.product_id == product_id)
+    
+    query = query.offset(skip).limit(limit)
+    sales = query.all()
+    
     return sales
 
 @router.get("/{id_sale}", response_model=sale_schema.Sale)
@@ -67,4 +98,41 @@ def get_sale_by_id(id_sale: int, db: Session = Depends(get_db)):
     sale = db.query(sale_model.Sale).filter(sale_model.Sale.id == id_sale).first()
     if not sale:
         raise HTTPException(status_code=404, detail="Sale Not Found")
+    return sale
+
+@router.post("/check/{unique_code}", response_model=sale_schema.Sale)
+def check_in_sale(unique_code: str, db: Session = Depends(get_db)):
+    sale = db.query(sale_model.Sale).filter(sale_model.Sale.unique_code == unique_code).first()
+    if not sale:
+        raise HTTPException(status_code=404, detail="Sale Not Found")
+    
+    if sale.status == "CANCELADO":
+        raise HTTPException(status_code=400, detail="Sale is canceled and cannot be checked in")
+    
+    if sale.checked_at is not None:
+        raise HTTPException(status_code=400, detail="Sale already checked in")
+
+    sale.checked_at = datetime.utcnow()
+    db.commit()
+    db.refresh(sale)
+    
+    return sale
+
+@router.put("/{id_sale}/cancel", response_model=sale_schema.Sale)
+def cancel_sale(id_sale: int, db: Session = Depends(get_db)):
+    sale = db.query(sale_model.Sale).filter(sale_model.Sale.id == id_sale).first()
+    if not sale:
+        raise HTTPException(status_code=404, detail="Sale Not Found")
+    
+    if sale.status == "CANCELADO":
+        raise HTTPException(status_code=400, detail="Sale already canceled")
+    
+    if sale.checked_at is not None:
+        raise HTTPException(status_code=400, detail="Checked-in sales cannot be canceled")
+    
+    
+    sale.status = "CANCELADO"
+    db.commit()
+    db.refresh(sale)
+    
     return sale

@@ -15,6 +15,7 @@ class Sale(SaleBase):
     seller_id: int | None = None
     sale_date: datetime
     unique_code: uuid.UUID
+    checked_at: datetime | None = None
     product: Product
 
     class Config:
