@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from database import engine
-from routers import product_route, event_route, user_route, auth_route
+from routers import product_route, event_route, user_route, auth_route, sale_route
 
 app = FastAPI()
 
@@ -26,6 +26,12 @@ app.include_router(
     auth_route.router,
     prefix="/login",
     tags=["Authentication"]
+)
+
+app.include_router(
+    sale_route.router,
+    prefix="/sale",
+    tags=["Vendas"]
 )
 
 @app.get("/")
