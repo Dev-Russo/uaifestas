@@ -2,33 +2,60 @@
 "use client";
 
 import { useState, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-
+  const [isLoading, setIsLoading] = useState(false);
   // --- 1. Adicionamos o estado para o checkbox aqui ---
   const [rememberMe, setRememberMe] = useState(false);
+  
+  const router = useRouter();
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
+    setIsLoading(true);
 
-    // Agora você tem acesso ao estado do checkbox aqui
-    console.log('Tentando fazer login com:', { email, password, rememberMe });
+    const formData = new URLSearchParams();
+    formData.append('grant_type', 'password');
+    formData.append('username', email);
+    formData.append('password', password);
 
-    // ===================================================================
-    // AQUI VOCÊ FARIA A CHAMADA PARA A SUA API FASTAPI
-    // Você pode enviar o valor de "rememberMe" junto com os dados de login
-    // ===================================================================
+
     try {
-      // ... sua lógica de chamada de API
-    } catch (err) {
+      const response = await fetch('http://127.0.0.1:8000/login/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Falha na Autenticação do Login');
+      }
+
+      const data = await response.json();
+      const { access_token } = data;
+
+      console.log('Token de Acesso:', access_token);
+      localStorage.setItem('access_token', access_token);
+      router.push('/dashboard');
+
+    } catch (err: any) {
       console.error('Erro no login:', err);
-      setError('Falha ao fazer login. Verifique seu e-mail e senha.');
-    }
-    // ===================================================================
+      setError(err.message || 'Falha ao fazer login. Verifique seu e-mail e senha.');
+    }finally {
+    setIsLoading(false);
+  }
+  // ===================================================================
+  // Nota: A lógica para "Lembre-se de mim" (rememberMe) pode ser implementada aqui.
+  // Por exemplo, você pode decidir onde armazenar o token (localStorage ou sessionStorage)
+  // com base no estado do checkbox.
   }
 
   return (
@@ -49,6 +76,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)} required
               className="mt-1 block w-full rounded-md bg-gray-100 border-gray-300 px-3 py-2 shadow-sm focus:border-gray-500 focus:outline-solid focus:outline-green-400 focus:ring-gray-500 placeholder:text-gray-400 text-gray-700"
               placeholder="seuemail@exemplo.com"
+              disabled={isLoading}
             />
           </div>
 
@@ -63,6 +91,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)} required
               className="mt-1 block w-full rounded-md bg-gray-100 border-gray-300 px-3 py-2 shadow-sm focus:border-gray-500 focus:outline-solid focus:outline-green-400 focus:ring-gray-500 placeholder:text-gray-400 text-gray-700"
               placeholder="********"
+              disabled={isLoading}
             />
           </div>
 
@@ -114,9 +143,10 @@ export default function LoginPage() {
           <div>
             <button
               type="submit"
+              disabled={isLoading}
               className="flex w-full justify-center rounded-md border border-transparent bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2"
             >
-              Entrar
+              {isLoading ? 'Entrando...' : 'Entrar'}
             </button>
           </div>
         </form>
