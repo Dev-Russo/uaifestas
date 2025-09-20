@@ -35,7 +35,11 @@ async def send_confirmation_email_async(recipient_email: str, email_data: Dict, 
 def send_confirmation_email_sync(recipient_email: str, email_data: Dict, qrcode_buffer: BytesIO):
     asyncio.run(send_confirmation_email_async(recipient_email, email_data, qrcode_buffer))
     
+
+
 def formated_email_to_send(sale: sale_model.Sale):
+    qrcode_filepath = None
+    
     try:
         qrcode_filepath = generate_qrcode_image_in_memory(str(sale.unique_code))
             

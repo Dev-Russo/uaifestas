@@ -19,8 +19,9 @@ def generate_qrcode_image_in_memory(data: str):
     img = qr.make_image(fill_color="black", back_color="white")
     
     filename = f"{str(uuid4())}.png"
-    filepath = os.path.join(TEMP_DIR, filename)
     
+    filepath = os.path.join(TEMP_DIR, filename)
+    print(filepath)
     img.save(filepath)
     
     return filepath
