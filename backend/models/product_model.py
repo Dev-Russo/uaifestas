@@ -13,3 +13,4 @@ class Product(Base):
     event_id = Column(Integer, ForeignKey('events.id', ondelete="CASCADE"), nullable=False)
     
     event = relationship("Event", back_populates="products")
+    sales = relationship("Sale", back_populates="product") 
