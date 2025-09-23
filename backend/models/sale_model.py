@@ -12,18 +12,14 @@ class Sale(Base):
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("products.id_product"), nullable=False)
     seller_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    
     buyer_name = Column(String, nullable=False)
     buyer_email = Column(String, nullable=False)
-    
     status = Column(String, default="PAGO", nullable=False) # Por padrão, toda venda já nasce "PAGA" Por ser vendas em dinheiro no momento
     payment_method = Column(String, default="dinheiro", nullable=False)
-    
     sale_date = Column(DateTime, default=datetime.utcnow, nullable=False)
-    
     unique_code = Column(UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False, index=True)
-    
     checked_at = Column(DateTime, nullable=True, default=None)
+    canceled_at = Column(DateTime, nullable=True, default=None)
     
     product = relationship("Product", back_populates="sales")
     seller = relationship("User", back_populates="sales")
