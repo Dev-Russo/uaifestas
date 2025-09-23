@@ -10,7 +10,7 @@ class Sale(Base):
     __tablename__ = "sales"
     
     id = Column(Integer, primary_key=True, index=True)
-    product_id = Column(Integer, ForeignKey("products.id_product"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     seller_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     buyer_name = Column(String, nullable=False)
     buyer_email = Column(String, nullable=False)

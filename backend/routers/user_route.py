@@ -1,3 +1,4 @@
+import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from utils.auth_utils import get_current_user
@@ -20,8 +21,10 @@ def create_user(user: user_schema.UserCreate, db: Session = Depends(get_db)):
         email = user.email,
         username = user.username,
         hashed_password = hash_pass,
-        role = user.role
+        role = user.role,
     )
+    
+    new_user.created_at = datetime.datetime.now()
     
     db.add(new_user)
     db.commit()
@@ -36,7 +39,8 @@ def get_users(db: Session = Depends(get_db)):
 
 @router.get("/{id_user}", response_model=user_schema.User)
 def get_user_by_id(id_user: int, db: Session = Depends(get_db)):
-    db_user = db.get(user_model.User, id_user)
+
+    db_user = db.query(user_model.User).filter(user_model.User.id == id_user).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User Not Found")
     return db_user
@@ -69,7 +73,7 @@ def update_user(
         email_exists = db.query(user_model.User).filter(user_model.User.email == user.email).first()
         if email_exists:
             raise HTTPException(status_code=400, detail="Email já Registrado")
-    elif user.email is not None:   
+    elif user.email is not None:
         db_user.email = user.email
 
     if user.username is not None:
@@ -90,15 +94,16 @@ def delete_user(
     db: Session = Depends(get_db),
     current_user: user_model.User = Depends(get_current_user)
     ):
+
     db_user = db.get(user_model.User, id_user)
     if not db_user:
         raise HTTPException(status_code=404, detail="User Not Found")
     
     if current_user.id != db_user.id and current_user.role != "client":
-        raise HTTPException(status_code=403, detail="Operation not permitted: you can only update your own user")
+        raise HTTPException(status_code=403, detail="Operation not permitted: you can only delete your own user")
     elif current_user.role != "admin" and db_user.role != "commissioner":
-        raise HTTPException(status_code=403, detail="Operation not permitted: only admins can update commissioners")
+        raise HTTPException(status_code=403, detail="Operation not permitted: only admins can delete commissioners")
     
     db.delete(db_user)
     db.commit()
-    return {"message": "User with {id_user} deleted sucessfully"}
+    return {f"message": "User with {id_user} deleted sucessfully"}

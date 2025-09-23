@@ -11,8 +11,8 @@ NOT_FOUND = "Event Not Found"
 router = APIRouter()
 
 @router.post("/", response_model=event_schema.Event)
-def create_event(  
-        event: event_schema.EventCreate, 
+def create_event(
+        event: event_schema.EventCreate,
         db: Session = Depends(get_db),
         current_user: user_model.User = Depends(get_current_user)
     ):
@@ -21,6 +21,10 @@ def create_event(
         raise HTTPException(status_code=403, detail="Operation not permitted")
     
     db_event = event_model.Event(**event.dict())
+
+    db_event.user_id = current_user.id
+    db_event.administrators.append(current_user)
+
     db.add(db_event)
     db.commit()
     db.refresh(db_event)
@@ -49,8 +53,8 @@ def get_products_event(id_event: int, db: Session = Depends(get_db)):
 
 @router.put("/{id_event}", response_model=event_schema.Event)
 def update_event(
-    id_event: int, 
-    event: event_schema.EventBase, 
+    id_event: int,
+    event: event_schema.EventBase,
     db: Session = Depends(get_db),
     current_user: user_model.User = Depends(get_current_user)
     ):
@@ -61,18 +65,33 @@ def update_event(
     
     if not db_event:
         raise HTTPException(status_code=404, detail=NOT_FOUND)
-    if current_user.id not in db_event.administrators and current_user.role != "admin":
+    elif all(admin.id != current_user.id for admin in db_event.administrators):
         raise HTTPException(status_code=403, detail="Operation not permitted: you can only update your own events")
     
     if event.name != None:
         db_event.name = event.name
     if event.description != None:
         db_event.description = event.description
-    if event.location != None:
-        db_event.location = event.location
-    if event.date != None:
-        db_event.date = event.date
-        
+    if event.street != None:
+        db_event.street = event.street
+    if event.created != None:
+        db_event.created = event.created
+    if event.cep != None:
+        db_event.cep = event.cep
+    if event.neighborhood != None:
+        db_event.neighborhood = event.neighborhood
+    if event.number != None:
+        db_event.number = event.number
+    if event.city != None:
+        db_event.city = event.city
+    if event.event_date != None:
+        db_event.event_date = event.event_date
+    if event.image_url != None:
+        db_event.image_url = event.image_url
+    if event.status != None:
+        db_event.status = event.status
+
+    
     db.commit()
     db.refresh(db_event)
     
@@ -80,7 +99,7 @@ def update_event(
         
 @router.delete("/{id_event}")
 def delete_event(
-    id_event: int, 
+    id_event: int,
     db: Session = Depends(get_db),
     current_user: user_model.User = Depends(get_current_user)
     ):
@@ -92,7 +111,7 @@ def delete_event(
     if not db_event:
         raise HTTPException(status_code=404, detail=NOT_FOUND)
 
-    if current_user.id not in db_event.administrators:
+    if all(admin.id != current_user.id for admin in db_event.administrators):
         raise HTTPException(status_code=403, detail="Operation not permitted: you can only update your own events")
     
     db.delete(db_event)
@@ -119,6 +138,7 @@ def add_event_admin(
         raise HTTPException(status_code=404, detail="User Not Found")
 
     db_event.administrators.append(new_admin)
+    
     db.commit()
     db.refresh(db_event)
 

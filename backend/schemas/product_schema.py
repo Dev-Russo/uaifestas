@@ -2,15 +2,17 @@ from pydantic import BaseModel
 from typing import Optional
 
 class ProductBase(BaseModel):
-    name_product: str
-    description_product: Optional[str] = None
+    name: str
+    description: Optional[str] = None
+    stock: Optional[int] = None
     price: float
+    image_url: Optional[str] = None
 
 class ProductCreate(ProductBase):
-    event_id: int
+    pass
 
 class Product(ProductBase):
-    id_product: int
+    id: int
     event_id: int
 
     class Config:
