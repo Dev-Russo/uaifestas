@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from utils.auth_utils import get_current_user
 from schemas import user_schema, event_schema
 from models import user_model
 from dependencies import get_db
@@ -48,11 +49,21 @@ def get_events_user(id_user: int, db: Session = Depends(get_db)):
     return user.events
 
 @router.put("/{id_user}", response_model=user_schema.User)
-def update_user(id_user: int, user: user_schema.UserCreate, db: Session = Depends(get_db)):
+def update_user(
+    id_user: int, 
+    user: user_schema.UserCreate, 
+    db: Session = Depends(get_db),
+    current_user: user_model.User = Depends(get_current_user)
+    ):
     db_user = db.get(user_model.User, id_user)
     
     if not db_user:
         raise HTTPException(status_code=404, detail="User Not Found")
+    
+    if current_user.id != db_user.id and current_user.role != "client":
+        raise HTTPException(status_code=403, detail="Operation not permitted: you can only update your own user")
+    elif current_user.role != "admin" and db_user.role != "commissioner":
+        raise HTTPException(status_code=403, detail="Operation not permitted: only admins can update commissioners")
     
     if user.email != db_user.email:
         email_exists = db.query(user_model.User).filter(user_model.User.email == user.email).first()
@@ -74,10 +85,20 @@ def update_user(id_user: int, user: user_schema.UserCreate, db: Session = Depend
     return db_user
 
 @router.delete("/{id_user}")
-def delete_user(id_user: int, db: Session = Depends(get_db)):
+def delete_user(
+    id_user: int,
+    db: Session = Depends(get_db),
+    current_user: user_model.User = Depends(get_current_user)
+    ):
     db_user = db.get(user_model.User, id_user)
     if not db_user:
         raise HTTPException(status_code=404, detail="User Not Found")
+    
+    if current_user.id != db_user.id and current_user.role != "client":
+        raise HTTPException(status_code=403, detail="Operation not permitted: you can only update your own user")
+    elif current_user.role != "admin" and db_user.role != "commissioner":
+        raise HTTPException(status_code=403, detail="Operation not permitted: only admins can update commissioners")
+    
     db.delete(db_user)
     db.commit()
     return {"message": "User with {id_user} deleted sucessfully"}
