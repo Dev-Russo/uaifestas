@@ -8,10 +8,7 @@ from schemas import event_schema, product_schema
 
 NOT_FOUND = "Event Not Found"
 
-
 router = APIRouter()
-
-
 
 @router.post("/", response_model=event_schema.Event)
 def create_event(  
@@ -64,7 +61,7 @@ def update_event(
     
     if not db_event:
         raise HTTPException(status_code=404, detail=NOT_FOUND)
-    if db_event.user_id != current_user.id:
+    if current_user.id not in db_event.administrators and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Operation not permitted: you can only update your own events")
     
     if event.name != None:
@@ -94,11 +91,35 @@ def delete_event(
     
     if not db_event:
         raise HTTPException(status_code=404, detail=NOT_FOUND)
-    
-    if db_event.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Operation not permitted: you can only delete your own events")
+
+    if current_user.id not in db_event.administrators:
+        raise HTTPException(status_code=403, detail="Operation not permitted: you can only update your own events")
     
     db.delete(db_event)
     db.commit()
 
     return {"message": f"Item with {id_event} deleted successfully"}
+
+@router.post("/{id_event}/add_admin/{id_user}", response_model=event_schema.Event)
+def add_event_admin(
+    id_event: int,
+    id_user: int,
+    db: Session = Depends(get_db),
+    current_user: user_model.User = Depends(get_current_user)
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Operation not permitted: only admins can add event administrators")
+
+    db_event = db.query(event_model.Event).filter(event_model.Event.id == id_event).first()
+    if not db_event:
+        raise HTTPException(status_code=404, detail=NOT_FOUND)
+
+    new_admin = db.query(user_model.User).filter(user_model.User.id == id_user).first()
+    if not new_admin:
+        raise HTTPException(status_code=404, detail="User Not Found")
+
+    db_event.administrators.append(new_admin)
+    db.commit()
+    db.refresh(db_event)
+
+    return db_event

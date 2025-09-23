@@ -60,7 +60,7 @@ def update_user(
     if not db_user:
         raise HTTPException(status_code=404, detail="User Not Found")
     
-    if current_user.id != db_user.id and current_user.role != "client":
+    if current_user.id != db_user.id and current_user.role not in ["admin", "commissioner", "client"]:
         raise HTTPException(status_code=403, detail="Operation not permitted: you can only update your own user")
     elif current_user.role != "admin" and db_user.role != "commissioner":
         raise HTTPException(status_code=403, detail="Operation not permitted: only admins can update commissioners")
