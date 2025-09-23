@@ -26,11 +26,20 @@ def create_commissioned_sale(
 def create_sale_site(
     sale_data: sale_schema.SaleCreate,
     db: Session = Depends(get_db),
+    current_user: user_model.User = Depends(get_current_user)
 ):  
     return create_sale(db=db, sale=sale_data)
 
 @router.post("/{id_sale}/resend", response_model=sale_schema.Sale)
-def resend_qrcode_mail(id: int, db: Session = Depends(get_db)):
+def resend_qrcode_mail(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: user_model.User = Depends(get_current_user)
+    ):
+    
+    if current_user.role not in ["admin", "commissioner"]:
+        raise HTTPException(status_code=403, detail="Operation not permitted: only admins and commissioners can resend sale emails")
+    
     db_sale = db.query(sale_model.Sale).filter(sale_model.Sale.id == id).first()
     
     if not db_sale:
@@ -41,7 +50,16 @@ def resend_qrcode_mail(id: int, db: Session = Depends(get_db)):
     return db_sale    
 
 @router.put("/{id_sale}/altermail", response_model=sale_schema.Sale)
-def alter_mail_name(id: int, sale: sale_schema.SaleBase, db: Session = Depends(get_db)):
+def alter_mail_name(
+    id: int,
+    sale: sale_schema.SaleBase, 
+    db: Session = Depends(get_db),
+    current_user: user_model.User = Depends(get_current_user)
+    ):
+    
+    if current_user.role not in ["admin", "commissioner"]:
+        raise HTTPException(status_code=403, detail="Operation not permitted: only admins and commissioners can alter sale email or name")
+    
     db_sale = db.query(sale_model.Sale).filter(sale_model.Sale.id == id).first()
     
     if not db_sale:
@@ -101,7 +119,15 @@ def get_sale_by_id(id_sale: int, db: Session = Depends(get_db)):
     return sale
 
 @router.post("/check/{unique_code}", response_model=sale_schema.Sale)
-def check_in_sale(unique_code: str, db: Session = Depends(get_db)):
+def check_in_sale(
+    unique_code: str, 
+    db: Session = Depends(get_db),
+    current_user: user_model.User = Depends(get_current_user)
+    ):
+    
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Operation not permitted: only admins can check-in sales")
+    
     sale = db.query(sale_model.Sale).filter(sale_model.Sale.unique_code == unique_code).first()
     if not sale:
         raise HTTPException(status_code=404, detail="Sale Not Found")
@@ -119,7 +145,15 @@ def check_in_sale(unique_code: str, db: Session = Depends(get_db)):
     return sale
 
 @router.put("/{id_sale}/cancel", response_model=sale_schema.Sale)
-def cancel_sale(id_sale: int, db: Session = Depends(get_db)):
+def cancel_sale(
+    id_sale: int, 
+    db: Session = Depends(get_db),
+    current_user: user_model.User = Depends(get_current_user)
+    ):
+    
+    if current_user.role not in ["admin", "commissioner"]:
+        raise HTTPException(status_code=403, detail="Operation not permitted: only admins and commissioners can cancel sales")
+    
     sale = db.query(sale_model.Sale).filter(sale_model.Sale.id == id_sale).first()
     if not sale:
         raise HTTPException(status_code=404, detail="Sale Not Found")
