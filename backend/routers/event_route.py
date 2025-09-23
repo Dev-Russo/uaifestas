@@ -57,13 +57,15 @@ def update_event(
     db: Session = Depends(get_db),
     current_user: user_model.User = Depends(get_current_user)
     ):
-    db_event = db.query(event_model.Event).filter(event_model.Event.id == id_event).first()
-    
     if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Operation not permitted")
+        raise HTTPException(status_code=403, detail="Operation not permitted: only admins can update events")
+    
+    db_event = db.query(event_model.Event).filter(event_model.Event.id == id_event).first()
     
     if not db_event:
         raise HTTPException(status_code=404, detail=NOT_FOUND)
+    if db_event.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Operation not permitted: you can only update your own events")
     
     if event.name != None:
         db_event.name = event.name
@@ -86,14 +88,17 @@ def delete_event(
     current_user: user_model.User = Depends(get_current_user)
     ):
     if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Operation not permitted")
+        raise HTTPException(status_code=403, detail="Operation not permitted: only admins can delete events")
     
     db_event = db.query(event_model.Event).filter(event_model.Event.id == id_event).first()
     
     if not db_event:
         raise HTTPException(status_code=404, detail=NOT_FOUND)
     
+    if db_event.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Operation not permitted: you can only delete your own events")
+    
     db.delete(db_event)
     db.commit()
-    
-    return {"message": f"Item with {id_event} deleted sucessfully"}
+
+    return {"message": f"Item with {id_event} deleted successfully"}
