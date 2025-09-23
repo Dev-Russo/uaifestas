@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey
 from sqlalchemy.orm import relationship, declarative_base
+from .association_tables import event_administrators_table
 from database import Base
 
 class Event(Base):
@@ -18,7 +19,10 @@ class Event(Base):
     image_url = Column(String, nullable=True)
     status = Column(String, default="active", nullable=False) # activate, cancelled, completed
     
-    user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"))
-    user = relationship("User", back_populates="events")
-    
+    administrators = relationship(
+        "User",
+        secondary=event_administrators_table,
+        back_populates="events"
+    )
+
     products = relationship("Product", back_populates="event", cascade="all, delete-orphan")

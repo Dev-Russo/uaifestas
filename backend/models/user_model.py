@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, Text
 from sqlalchemy.orm import relationship, declarative_base
+from .association_tables import event_administrators_table
 from database import Base
 
 class User(Base):
@@ -14,4 +15,9 @@ class User(Base):
     created_at = Column(DateTime, nullable=False)
     
     events = relationship("Event", back_populates="user", cascade="all, delete-orphan")
+    events = relationship(
+        "Event",
+        secondary=event_administrators_table,
+        back_populates="administrators"
+    )
     sales = relationship("Sale", back_populates="seller")
