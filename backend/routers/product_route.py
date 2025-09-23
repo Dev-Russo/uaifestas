@@ -38,7 +38,7 @@ def get_all_products(db: Session = Depends(get_db)):
 
 @router.get("/{id_product}", response_model=product_schema.Product)
 def get_by_id(id_product: int, db: Session = Depends(get_db)):
-    product =  db.query(product_model.Product).filter(product_model.Product.id_product == id_product).first()
+    product =  db.query(product_model.Product).filter(product_model.Product.id == id_product).first()
     if not product:
         raise HTTPException(status_code=404, detail="Products not found")
     return product
@@ -53,9 +53,9 @@ def update_by_id(
     
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Operation not permitted: only admins can update products")
-    
-    db_product = db.query(product_model.Product).options(joinedload(product_model.Product.event)).filter(product_model.Product.id_product == id_product).first()
-    
+
+    db_product = db.query(product_model.Product).options(joinedload(product_model.Product.event)).filter(product_model.Product.id == id_product).first()
+
     if not db_product:
         raise HTTPException(status_code=404, detail="Product not Found")
     

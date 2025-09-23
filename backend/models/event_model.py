@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey
 from sqlalchemy.orm import relationship, declarative_base
+from .association_tables import event_administrators_table
 from database import Base
 
 class Event(Base):
@@ -8,10 +9,20 @@ class Event(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable = False, index = True)
     description = Column(Text, nullable=False, index=True)
-    location = Column(String, nullable=False)
-    date = Column(DateTime, nullable=False)
+    street = Column(String, nullable=False)
+    cep = Column(String, nullable=False)
+    neighborhood = Column(String, nullable=False)
+    number = Column(String, nullable=False)
+    city = Column(String, nullable=False)
+    created = Column(DateTime, nullable=False)
+    event_date = Column(DateTime, nullable=False)
+    image_url = Column(String, nullable=True)
+    status = Column(String, default="active", nullable=False) # activate, cancelled, completed
     
-    user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"))
-    user = relationship("User", back_populates="events")
-    
+    administrators = relationship(
+        "User",
+        secondary=event_administrators_table,
+        back_populates="events"
+    )
+
     products = relationship("Product", back_populates="event", cascade="all, delete-orphan")
