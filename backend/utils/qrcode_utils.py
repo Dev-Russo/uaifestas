@@ -6,7 +6,6 @@ from uuid import uuid4
 TEMP_DIR = "temp_qrcodes"
 
 def generate_qrcode_image_in_memory(data: str):
-    os.makedirs(TEMP_DIR, exist_ok=True)
     
     qr = qrcode.QRCode(
         version=1, 
@@ -18,10 +17,8 @@ def generate_qrcode_image_in_memory(data: str):
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
     
-    filename = f"{str(uuid4())}.png"
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    buffer.seek(0)
     
-    filepath = os.path.join(TEMP_DIR, filename)
-    print(filepath)
-    img.save(filepath)
-    
-    return filepath
+    return buffer
