@@ -1,5 +1,3 @@
-// app/login/page.tsx
-
 "use client";
 
 import { useState, FormEvent } from 'react';
@@ -26,7 +24,7 @@ export default function LoginPage() {
     formData.append('password', password);
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/token', {
+      const response = await fetch('http://127.0.0.1:8000/login/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
