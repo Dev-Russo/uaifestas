@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey
 from sqlalchemy.orm import relationship, declarative_base
 from .association_tables import event_administrators_table
 from database import Base
+from enums import EventStatus
 
 class Event(Base):
     __tablename__ = "events"
@@ -17,7 +18,7 @@ class Event(Base):
     created = Column(DateTime, nullable=False)
     event_date = Column(DateTime, nullable=True)
     image_url = Column(String, nullable=True)
-    status = Column(String, default="active", nullable=False) # activate, cancelled, completed
+    status = Column(String, default=EventStatus.ACTIVE, nullable=False) # activate, cancelled, completed
     
     administrators = relationship(
         "User",

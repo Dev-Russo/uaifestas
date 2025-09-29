@@ -5,6 +5,7 @@ from database import Base
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 from database import Base
+from enums import SaleStatus
 
 class Sale(Base):
     __tablename__ = "sales"
@@ -14,7 +15,7 @@ class Sale(Base):
     seller_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     buyer_name = Column(String, nullable=False)
     buyer_email = Column(String, nullable=False)
-    status = Column(String, default="PAGO", nullable=False) # Por padrão, toda venda já nasce "PAGA" Por ser vendas em dinheiro no momento
+    status = Column(String, default=SaleStatus.PAID, nullable=False) # Por padrão, toda venda já nasce "PAGA" Por ser vendas em dinheiro no momento
     payment_method = Column(String, default="dinheiro", nullable=False)
     sale_date = Column(DateTime, default=datetime.utcnow, nullable=False)
     unique_code = Column(UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False, index=True)
