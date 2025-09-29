@@ -14,7 +14,6 @@ class User(Base):
     avatar_url = Column(String, nullable=True)
     created_at = Column(DateTime, nullable=False)
     
-    events = relationship("Event", back_populates="user", cascade="all, delete-orphan")
     events = relationship(
         "Event",
         secondary=event_administrators_table,
