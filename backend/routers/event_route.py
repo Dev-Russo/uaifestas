@@ -22,7 +22,6 @@ def create_event(
     
     db_event = event_model.Event(**event.dict())
 
-    db_event.user_id = current_user.id
     db_event.administrators.append(current_user)
 
     db.add(db_event)
