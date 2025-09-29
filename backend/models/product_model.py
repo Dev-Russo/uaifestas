@@ -4,10 +4,9 @@ from database import Base
 
 class Product(Base):
     __tablename__ = "products"
-    
     id = Column(Integer, primary_key = True)
-    name_product = Column(String(100), nullable=False, index=True)
-    description_product = Column(String, nullable=False)
+    name = Column(String(100), nullable=False, index=True)
+    description = Column(String, nullable=False)
     price = Column(Float, nullable=False)
     image_url = Column(String, nullable=True)
     stack = Column(Integer, nullable=False)

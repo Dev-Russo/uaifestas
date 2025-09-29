@@ -151,8 +151,8 @@ def cancel_sale(
     current_user: user_model.User = Depends(get_current_user)
     ):
     
-    if current_user.role not in ["admin", "commissioner"]:
-        raise HTTPException(status_code=403, detail="Operation not permitted: only admins and commissioners can cancel sales")
+    if current_user.role != "admin":    
+        raise HTTPException(status_code=403, detail="Operation not permitted: only admins can cancel sales")
     
     sale = db.query(sale_model.Sale).filter(sale_model.Sale.id == id_sale).first()
     if not sale:
