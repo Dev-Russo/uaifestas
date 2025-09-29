@@ -10,7 +10,6 @@ from schemas import token_schema
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login/token")
 
-SECRET_KEY = "ELyled5g8o8tD4x3yVqm5f5qYR2lXifY"
 ALGORITHM = "HS256"
 ACESS_TOKEN_EXPIRE_MINUTES = 1440
 
