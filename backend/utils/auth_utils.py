@@ -7,9 +7,11 @@ from models.user_model import User as UserModel
 from dependencies import get_db
 from datetime import datetime, timedelta, timezone
 from schemas import token_schema
+from config import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login/token")
 
+SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = "HS256"
 ACESS_TOKEN_EXPIRE_MINUTES = 1440
 
