@@ -1,15 +1,14 @@
-// app/login/page.tsx
 "use client";
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  // --- 1. Adicionamos o estado para o checkbox aqui ---
   const [rememberMe, setRememberMe] = useState(false);
   
   const router = useRouter();
@@ -23,7 +22,6 @@ export default function LoginPage() {
     formData.append('grant_type', 'password');
     formData.append('username', email);
     formData.append('password', password);
-
 
     try {
       const response = await fetch('http://127.0.0.1:8000/login/token', {
@@ -41,40 +39,39 @@ export default function LoginPage() {
 
       const data = await response.json();
       const { access_token } = data;
+      
+      if (rememberMe) {
+        Cookies.set('auth_token', access_token, { expires: 1, path: '/' });
+      } else {
+        Cookies.set('auth_token', access_token, { path: '/' });
+      }
 
-      console.log('Token de Acesso:', access_token);
-      localStorage.setItem('access_token', access_token);
       router.push('/dashboard');
 
     } catch (err: any) {
       console.error('Erro no login:', err);
       setError(err.message || 'Falha ao fazer login. Verifique seu e-mail e senha.');
-    }finally {
-    setIsLoading(false);
-  }
-  // ===================================================================
-  // Nota: A lógica para "Lembre-se de mim" (rememberMe) pode ser implementada aqui.
-  // Por exemplo, você pode decidir onde armazenar o token (localStorage ou sessionStorage)
-  // com base no estado do checkbox.
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
-        <h2 className="mb-6 text-center text-2xl font-bold text-gray-900">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-neutral-900">
+      <div className="w-full max-w-md rounded-lg bg-white dark:bg-neutral-800 p-8 shadow-lg">
+        <h2 className="mb-6 text-center text-2xl font-bold text-gray-900 dark:text-white">
           Acesse sua conta
         </h2>
         <form onSubmit={handleSubmit}>
           {/* Campo de Email */}
           <div className="mb-4">
-            {/* ... (código do input de email) ... */}
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-white">
               Email
             </label>
             <input
               type="email" id="email" name="email" value={email}
               onChange={(e) => setEmail(e.target.value)} required
-              className="mt-1 block w-full rounded-md bg-gray-100 border-gray-300 px-3 py-2 shadow-sm focus:border-gray-500 focus:outline-solid focus:outline-green-400 focus:ring-gray-500 placeholder:text-gray-400 text-gray-700"
+              className="mt-1 block w-full rounded-md bg-gray-100 dark:bg-neutral-600 border-gray-300 px-3 py-2 shadow-sm focus:border-gray-500 focus:outline-solid focus:outline-green-400 focus:ring-gray-500 placeholder:text-gray-400 text-gray-700 dark:text-white"
               placeholder="seuemail@exemplo.com"
               disabled={isLoading}
             />
@@ -82,14 +79,13 @@ export default function LoginPage() {
 
           {/* Campo de Senha */}
           <div className="mb-6">
-            {/* ... (código do input de senha) ... */}
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-white">
               Senha
             </label>
             <input
               type="password" id="password" name="password" value={password}
               onChange={(e) => setPassword(e.target.value)} required
-              className="mt-1 block w-full rounded-md bg-gray-100 border-gray-300 px-3 py-2 shadow-sm focus:border-gray-500 focus:outline-solid focus:outline-green-400 focus:ring-gray-500 placeholder:text-gray-400 text-gray-700"
+              className="mt-1 block w-full rounded-md bg-gray-100 dark:bg-neutral-600 border-gray-300 px-3 py-2 shadow-sm focus:border-gray-500 focus:outline-solid focus:outline-green-400 focus:ring-gray-500 placeholder:text-gray-400 text-gray-700 dark:text-white"
               placeholder="********"
               disabled={isLoading}
             />
@@ -97,7 +93,6 @@ export default function LoginPage() {
 
           {/* Seção Lembre-se de mim e Esqueceu a senha */}
           <div className="mb-6 flex items-center justify-between">
-            {/* --- 2. Todo o JSX do checkbox foi colocado aqui --- */}
             <label className="flex cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
@@ -107,11 +102,10 @@ export default function LoginPage() {
               />
               <div
                 className="
-                  flex h-5 w-5 items-center justify-center rounded-md border-2 border-gray-200 
+                  flex h-5 w-5 items-center justify-center rounded-md border-2 border-gray-200 dark:border-white
                   bg-white transition-all
                   peer-checked:border-green-400 peer-checked:bg-green-400"
               >
-                {/* Ícone SVG diretamente inline */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -123,12 +117,12 @@ export default function LoginPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
               </div>
-              <span className="select-none text-sm font-medium text-gray-700">
+              <span className="select-none text-sm font-medium text-gray-700 dark:text-white">
                 Lembre-se de mim
               </span>
             </label>
 
-            <a href="#" className="text-sm font-medium text-gray-600 hover:text-green-600 focus:ring-1 focus:ring-green-500 focus:ring-offset-2 rounded-md">
+            <a href="#" className="text-sm font-medium text-gray-600 dark:text-white hover:text-green-600 focus:ring-1 focus:ring-green-500 focus:ring-offset-2 rounded-md">
               Esqueceu a senha?
             </a>
           </div>
@@ -144,7 +138,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="flex w-full justify-center rounded-md border border-transparent bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2"
+              className="flex w-full justify-center rounded-md border border-transparent bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 disabled:opacity-50"
             >
               {isLoading ? 'Entrando...' : 'Entrar'}
             </button>

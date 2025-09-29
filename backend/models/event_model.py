@@ -15,7 +15,7 @@ class Event(Base):
     number = Column(String, nullable=False)
     city = Column(String, nullable=False)
     created = Column(DateTime, nullable=False)
-    event_date = Column(DateTime, nullable=False)
+    event_date = Column(DateTime, nullable=True)
     image_url = Column(String, nullable=True)
     status = Column(String, default="active", nullable=False) # activate, cancelled, completed
     

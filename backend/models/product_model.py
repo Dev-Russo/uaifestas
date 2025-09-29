@@ -9,7 +9,7 @@ class Product(Base):
     description = Column(String, nullable=False)
     price = Column(Float, nullable=False)
     image_url = Column(String, nullable=True)
-    stack = Column(Integer, nullable=False)
+    stock = Column(Integer, nullable=True, default=None)
     
     event_id = Column(Integer, ForeignKey('events.id', ondelete="CASCADE"), nullable=False)
     

@@ -10,7 +10,7 @@ import locale
 locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
 
 def create_sale(db: Session, sale: sale_schema.SaleCreate, seller_id: int | None = None) -> sale_model.Sale:
-    product = db.query(product_model.Product).filter(product_model.Product.id_product == sale.product_id).first()
+    product = db.query(product_model.Product).filter(product_model.Product.id == sale.product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product Not Found")
     
@@ -27,6 +27,11 @@ def create_sale(db: Session, sale: sale_schema.SaleCreate, seller_id: int | None
         buyer_name = sale.buyer_name,
         buyer_email = sale.buyer_email
     )
+
+    if product.stock is not None:
+        if product.stock <= 0:
+            raise HTTPException(status_code=400, detail="Product Out of Stock")
+        product.stock -= 1
     
     db.add(new_sale)
     db.commit()
