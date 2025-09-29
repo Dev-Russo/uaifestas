@@ -9,6 +9,7 @@ from utils.auth_utils import get_current_user
 from utils.sale_utils import create_sale
 from utils.email_utils import formated_email_to_send
 from typing import Optional, List
+from enums import SaleStatus
 import os
 
 router = APIRouter()
@@ -135,7 +136,7 @@ def check_in_sale(
     if not sale:
         raise HTTPException(status_code=404, detail="Sale Not Found")
     
-    if sale.status == "CANCELADO":
+    if sale.status == SaleStatus.CANCELED:
         raise HTTPException(status_code=400, detail="Sale is canceled and cannot be checked in")
     
     if sale.checked_at is not None:
@@ -161,14 +162,14 @@ def cancel_sale(
     if not sale:
         raise HTTPException(status_code=404, detail="Sale Not Found")
     
-    if sale.status == "CANCELADO":
+    if sale.status == SaleStatus.CANCELED:
         raise HTTPException(status_code=400, detail="Sale already canceled")
     
     if sale.checked_at is not None:
         raise HTTPException(status_code=400, detail="Checked-in sales cannot be canceled")
     
     
-    sale.status = "CANCELADO"
+    sale.status = SaleStatus.CANCELED
     db.commit()
     db.refresh(sale)
     
