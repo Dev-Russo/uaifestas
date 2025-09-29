@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session, joinedload
-from models import event_model
-from models import user_model
-from utils.auth_utils import get_current_user
-from dependencies import get_db
-from models import product_model
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from models import user_model, product_model
 from schemas import product_schema
+from dependencies import get_db
+from utils.auth_utils import get_current_user
+from utils.product_utils import check_admin_permission_for_event 
 
 router = APIRouter()
 
@@ -15,20 +14,10 @@ def create_product(
     product: product_schema.ProductCreate,
     db: Session = Depends(get_db),
     current_user: user_model.User = Depends(get_current_user)
-    ):
-    
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Operation not permitted: only admins can create products")
-        
-    event = db.query(event_model.Event).filter(event_model.Event.id == event_id).first()
-    if not event:
-        raise HTTPException(status_code=404, detail="Event Not Found")
-    
-    if all(admin.id != current_user.id for admin in event.administrators):
-        raise HTTPException(status_code=403, detail="Operation not permitted: you can only add products to your own events")
+):
+    check_admin_permission_for_event(db, current_user, event_id)
 
     db_product = product_model.Product(**product.dict(), event_id=event_id)
-
 
     db.add(db_product)
     db.commit()
@@ -38,70 +27,51 @@ def create_product(
 
 @router.get("/", response_model=list[product_schema.Product])
 def get_all_products(db: Session = Depends(get_db)):
-    product =  db.query(product_model.Product).all()
-    return product
+    products = db.query(product_model.Product).all()
+    return products
 
 @router.get("/{id_product}", response_model=product_schema.Product)
 def get_by_id(id_product: int, db: Session = Depends(get_db)):
-    product =  db.query(product_model.Product).filter(product_model.Product.id == id_product).first()
+    product = db.query(product_model.Product).filter(product_model.Product.id == id_product).first()
     if not product:
-        raise HTTPException(status_code=404, detail="Products not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
     return product
 
-@router.put("/{id_product}")
+@router.put("/{id_product}", response_model=product_schema.Product)
 def update_by_id(
     id_product: int,
     product: product_schema.ProductBase,
     db: Session = Depends(get_db),
     current_user: user_model.User = Depends(get_current_user)
-    ):
-    
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Operation not permitted: only admins can update products")
-
-    db_product = db.query(product_model.Product).options(joinedload(product_model.Product.event)).filter(product_model.Product.id == id_product).first()
+):
+    db_product = db.query(product_model.Product).filter(product_model.Product.id == id_product).first()
 
     if not db_product:
-        raise HTTPException(status_code=404, detail="Product not Found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not Found")
 
-    event = db.query(event_model.Event).filter(event_model.Event.id == db_product.event_id).first()
+    check_admin_permission_for_event(db, current_user, db_product.event_id)
 
-    if all(admin.id != current_user.id for admin in event.administrators):
-        raise HTTPException(status_code=403, detail="Operation not permitted: you can only update products of your own events")
-
-    if product.name is not None:
-        db_product.name = product.name
-    if product.description is not None:
-        db_product.description = product.description
-    if product.price is not None:
-        db_product.price = product.price
-    if product.image_url is not None:
-        db_product.image_url = product.image_url
-    if product.stock is not None:
-        db_product.stock = product.stock
+    product_data = product.dict(exclude_unset=True)
+    for key, value in product_data.items():
+        setattr(db_product, key, value)
 
     db.commit()
     db.refresh(db_product)
     
     return db_product
 
-@router.delete("/{id_product}")
+@router.delete("/{id_product}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_by_id(
     id_product: int,
-    db : Session = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: user_model.User = Depends(get_current_user)
-    ):
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Operation not permitted: only admins can delete products")
-
+):
     db_product = db.query(product_model.Product).filter(product_model.Product.id == id_product).first()
-    if not db_product:
-        raise HTTPException(status_code=404, detail="Product not found")
-
-    event = db.query(event_model.Event).filter(event_model.Event.id == db_product.event_id).first()
-    if all(admin.id != current_user.id for admin in event.administrators):
-        raise HTTPException(status_code=403, detail="Operation not permitted: you can only delete products of your own events")
-
-    db.delete(db_product)
-    db.commit()
+    
+    if db_product:
+        check_admin_permission_for_event(db, current_user, db_product.event_id)
+        
+        db.delete(db_product)
+        db.commit()
+    
     return {"message": f"Item with {id_product} deleted successfully"}
