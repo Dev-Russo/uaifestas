@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
+// import Cookies from 'js-cookie';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -40,11 +40,23 @@ export default function LoginPage() {
       const data = await response.json();
       const { access_token } = data;
       
+      // ======================= VERSÃO PROVISÓRIA =======================
+      // Salva token no Storage do navegador.
+      // vulnerável a ataques XSS.
       if (rememberMe) {
-        Cookies.set('auth_token', access_token, { expires: 1, path: '/' });
+        // "Lembre-se de mim" usa o localStorage, que persiste após fechar o navegador.
+        localStorage.setItem('auth_token', access_token);
       } else {
-        Cookies.set('auth_token', access_token, { path: '/' });
+        // Se não, usa o sessionStorage, que é limpo ao fechar a aba/navegador.
+        sessionStorage.setItem('auth_token', access_token);
       }
+
+      // ======================= VERSÃO FINAL (HttpOnly) =======================
+      // o backend que irá setar o cookie HttpOnly.
+      // O frontend NÃO fará nada com o token.
+      // Todo este bloco 'if (rememberMe) { ... }' será removido.
+      // O frontend apenas confirmará que a resposta foi 'ok' e fará o redirecionamento.
+      // ====================================================================================
 
       router.push('/dashboard');
 
