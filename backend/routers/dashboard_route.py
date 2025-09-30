@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, date
 from typing import Optional, List
 from dependencies import get_db
 from utils.auth_utils import get_current_user
-from utils.dashboard_utils import get_statistics
+from utils.dashboard_utils import get_sellers_statistics, get_statistics
 from models import user_model, event_model, sale_model, product_model
 from schemas import dashboard_schema
 from enums import SaleStatus, EventStatus
@@ -107,3 +107,20 @@ def get_products_stats(
         products = products.limit(limit)
 
     return products.all()
+
+@router.get("/event/{event_id}/sellers", response_model=List[dashboard_schema.SallerStats])
+def get_sellers_stats(
+    event_id: int,
+    db: Session = Depends(get_db),
+    current_user: user_model.User = Depends(get_current_user)
+):
+    event = db.query(event_model.Event).filter(event_model.Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event Not Found")
+
+    if current_user.role != "admin" or current_user not in event.administrators:
+        raise HTTPException(status_code=403, detail="Operation not permitted")
+
+    sellers_stats = get_sellers_statistics(db, event_id, datetime.utcnow().date() - timedelta(days=30), datetime.utcnow().date(), current_user)
+    
+    return sellers_stats
