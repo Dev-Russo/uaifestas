@@ -80,3 +80,30 @@ def get_sales_metrics(
     )
     
     return metrics
+
+@router.get("/event/{event_id}/products", response_model=List[dashboard_schema.ProductSalesStats])
+def get_products_stats(
+    event_id: int,
+    limit: Optional[int] = Query(None, description="Limitar quantidade de produtos"),
+    order_by: str = Query("sales", description="Ordenar por: sales, revenue"),
+    db: Session = Depends(get_db),
+    current_user: user_model.User = Depends(get_current_user)
+):
+    event = db.query(event_model.Event).filter(event_model.Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event Not Found")
+
+    if current_user.role != "admin" or current_user not in event.administrators:
+        raise HTTPException(status_code=403, detail="Operation not permitted")
+
+    products = db.query(product_model.Product).filter(product_model.Product.event_id == event_id)
+
+    if order_by == "revenue":
+        products = products.join(sale_model.Sale).filter(sale_model.Sale.status == SaleStatus.PAID).group_by(product_model.Product.id).order_by(func.sum(product_model.Product.price).desc())
+    else:
+        products = products.join(sale_model.Sale).filter(sale_model.Sale.status == SaleStatus.PAID).group_by(product_model.Product.id).order_by(func.count(sale_model.Sale.id).desc())
+
+    if limit:
+        products = products.limit(limit)
+
+    return products.all()
