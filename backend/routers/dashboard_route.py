@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, date
 from typing import Optional, List
 from dependencies import get_db
 from utils.auth_utils import get_current_user
+from utils.dashboard_utils import get_statistics
 from models import user_model, event_model, sale_model, product_model
 from schemas import dashboard_schema
 from enums import SaleStatus, EventStatus
@@ -28,30 +29,54 @@ def get_event_dashboard(
     end_date = datetime.utcnow()
     start_date = end_date - timedelta(days=days)
     
-    total_sales = db.query(func.count(sale_model.Sale.id)).join(product_model.Product).filter(
-        product_model.Product.event_id == event_id,
-        sale_model.Sale.status == SaleStatus.PAID,
-        sale_model.Sale.created_at >= start_date,
-        sale_model.Sale.created_at <= end_date
-    ).scalar()
+    stats = get_statistics(db, event_id, start_date.date(), end_date.date(), current_user)
     
-    total_revenue = db.query(func.coalesce(func.sum(product_model.Product.price), 0)).join(sale_model.Sale).filter(
-        product_model.Product.event_id == event_id,
-        sale_model.Sale.status == SaleStatus.PAID,
-        sale_model.Sale.created_at >= start_date,
-        sale_model.Sale.created_at <= end_date
-    ).scalar()
-    
-    avg_sale_value = total_revenue / total_sales if total_sales > 0 else 0.0
-    total_products = db.query(func.count(product_model.Product.id)).filter(
-        product_model.Product.event_id == event_id
-    ).scalar()
     
     dashboard = dashboard_schema.EventDashboard(
-        total_sales=total_sales,
-        total_revenue=total_revenue,
-        avg_sale_value=avg_sale_value,
-        total_products=total_products
+        total_sales=stats["total_sales"],
+        total_revenue=stats["total_revenue"],
+        avg_sale_value=stats["avg_sale_value"],
+        total_products=stats["total_products"]
     )
     
     return dashboard
+
+@router.get("/event/{event_id}/sales-metrics", response_model=dashboard_schema.SaleMetrics)
+def get_sales_metrics(
+    event_id: int,
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: user_model.User = Depends(get_current_user)
+):
+    event = db.query(event_model.Event).filter(event_model.Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event Not Found")
+    
+    if current_user.role != "admin" or current_user not in event.administrators:
+        raise HTTPException(status_code=403, detail="Operation not permitted")
+    
+    if not start_date:
+        start_date = datetime.utcnow().date() - timedelta(days=30)
+    
+    if not end_date:
+        end_date = datetime.utcnow().date()
+        
+    if start_date > end_date:
+        raise HTTPException(status_code=400, detail="start_date must be before end_date")
+    
+    stats = get_statistics(db, event_id, start_date, end_date, current_user)
+
+    cancellation_rate = (stats["total_canceled"] / (stats["total_sales"] + stats["total_canceled"]) * 100) if (stats["total_sales"] + stats["total_canceled"]) > 0 else 0.0
+    
+    total_sales = stats["total_sales"]
+        
+    metrics = dashboard_schema.SaleMetrics(
+        total_sales=total_sales,
+        total_revenue=stats["total_revenue"],
+        avg_sale_value=stats["avg_sale_value"],
+        total_canceled=stats["total_canceled"],
+        cancellation_rate=cancellation_rate
+    )
+    
+    return metrics
