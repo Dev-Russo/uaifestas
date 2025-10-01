@@ -1,25 +1,57 @@
 'use client'; 
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import EventCard from '@/app/components/EventCard';
 import EventFilters from '@/app/components/EventFilters';
 
 // Dummy data (substituir por chamadas da API)
-const EVENTOS = [
-  { id: 1, name: 'Festival de Rock Independente', date: '15/10/2025', status: 'upcoming' as const },
-  { id: 2, name: 'Show de Stand-up Comedy', date: '22/10/2025', status: 'upcoming' as const },
-  { id: 3, name: 'Feira de Tecnologia e Inovação', date: '01/08/2025', status: 'past' as const },
-  { id: 4, name: 'Concerto de Jazz & Blues', date: '05/11/2025', status: 'upcoming' as const },
-  { id: 5, name: 'Workshop de Marketing Digital', date: '10/09/2025', status: 'past' as const },
-  { id: 6, name: 'Festival Gastronômico Local', date: '12/12/2025', status: 'upcoming' as const },
-];
+// const EVENTOS = [
+//   { id: 1, name: 'Festival de Rock Independente', date: '15/10/2025', status: 'upcoming' as const },
+//   { id: 2, name: 'Show de Stand-up Comedy', date: '22/10/2025', status: 'upcoming' as const },
+//   { id: 3, name: 'Feira de Tecnologia e Inovação', date: '01/08/2025', status: 'past' as const },
+//   { id: 4, name: 'Concerto de Jazz & Blues', date: '05/11/2025', status: 'upcoming' as const },
+//   { id: 5, name: 'Workshop de Marketing Digital', date: '10/09/2025', status: 'past' as const },
+//   { id: 6, name: 'Festival Gastronômico Local', date: '12/12/2025', status: 'upcoming' as const },
+// ];
 
-export default function DashboardPage() {
+
+export default function DashboardPage({ events }: { events: any[] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('upcoming'); // Valor padrão do filtro
+  const [eventos, setEventos] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchEvents() {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/events/");
+        if (!response.ok) throw new Error('Erro ao buscar eventos');
+        const data = await response.json();
+        setEventos(data);
+      } catch (err: any){
+        setError(err.message);
+      }
+    }
+    fetchEvents();
+  }, []);
+
+  const mappedEvents = useMemo(() => {
+    return eventos.map((event) => {
+      const eventDate = new Date(event.event_date);
+      const now = new Date();
+      const status = eventDate >= now ? 'upcoming' : 'past';
+      const formattedDate = eventDate.toLocaleDateString('pt-BR');
+      return {
+        id: event.id,
+        name: event.name,
+        date: formattedDate,
+        status,
+      };
+    });
+  }, [eventos]);
 
   const filteredEvents = useMemo(() => {
-    return EVENTOS.filter((event) => {
+    return mappedEvents.filter((event) => {
       const matchesSearch = event.name.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesFilter =
@@ -29,19 +61,18 @@ export default function DashboardPage() {
 
       return matchesSearch && matchesFilter;
     });
-  }, [searchTerm, filter]);
+  }, [mappedEvents, searchTerm, filter]);
 
   return (
     <div>
       <h2 className="text-3xl font-bold mb-4 text-green-400 ">Meus Eventos</h2>
-      
       <EventFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         filter={filter}
         setFilter={setFilter}
       />
-
+      {error && <div className="text-red-500 mb-4">{error}</div>}
       {filteredEvents.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredEvents.map((event) => (
