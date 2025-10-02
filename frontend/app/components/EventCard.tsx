@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 interface Event {
   id: number;
   name: string;
@@ -30,9 +32,11 @@ export default function EventCard({ event }: EventCardProps) {
         </span>
       </div>
       <div className="mt-4 flex justify-end">
-        <button className="px-4 py-2 text-sm shadow-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-green-400">
-          Gerenciar
-        </button>
+        <Link href={`/dashboard/gerenciar-evento/${event.id}`}>
+          <button className="px-4 py-2 text-sm shadow-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-green-400">
+            Gerenciar
+          </button>
+        </Link>
       </div>
     </div>
   );
