@@ -8,3 +8,8 @@ class EventStatus(str, enum.Enum):
 class SaleStatus(str, enum.Enum):
     PAID = "PAGO"
     CANCELED = "CANCELADO"
+    
+class UserRole(str, enum.Enum):
+    ADMIN = "admin"
+    USER = "user"
+    COMMISSIONER = "commissioner"

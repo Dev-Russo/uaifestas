@@ -5,6 +5,7 @@ from models import user_model
 from dependencies import get_db
 from models import event_model
 from schemas import event_schema, product_schema
+from enums import UserRole
 
 NOT_FOUND = "Event Not Found"
 
@@ -128,10 +129,19 @@ def delete_event(
 
     return {"message": f"Item with {id_event} deleted successfully"}
 
+
+"""
+Preciso fazer um envio para o email com um end-point que ficara esperando a aceitação do convite,
+Assim que o usuario aceitar o convite, ele tera seu role alterado para comissioner e sera adicionado a lista de comissioners do evento
+por enquanto vai ficar assim.
+
+Em ambos os Metodos Abaixo.
+"""
+
 @router.post("/{id_event}/add_admin/{id_user}", response_model=event_schema.Event)
 def add_event_admin(
     id_event: int,
-    id_user: int,
+    email_user: str,
     db: Session = Depends(get_db),
     current_user: user_model.User = Depends(get_current_user)
 ):
@@ -142,12 +152,47 @@ def add_event_admin(
     if not db_event:
         raise HTTPException(status_code=404, detail=NOT_FOUND)
 
-    new_admin = db.query(user_model.User).filter(user_model.User.id == id_user).first()
+    new_admin = db.query(user_model.User).filter(user_model.User.email == email_user).first()
     if not new_admin:
         raise HTTPException(status_code=404, detail="User Not Found")
 
+    new_admin.role = UserRole.ADMIN
+    if new_admin in db_event.administrators:
+        raise HTTPException(status_code=400, detail="User is already an administrator of this event")
+    
     db_event.administrators.append(new_admin)
     
+    db.commit()
+    db.refresh(db_event)
+
+    return db_event
+
+
+@router.post("/{id_event}/comissioners", response_model=event_schema.Event)
+def create_commisioner_for_event(
+    id_event: int,
+    email_user: str,
+    db: Session = Depends(get_db),
+    current_user: user_model.User = Depends(get_current_user)
+):
+    event = db.query(event_model.Event).filter(event_model.Event.id == id_event).first()
+    if not event:
+        raise HTTPException(status_code=404, detail=NOT_FOUND)
+    
+    if current_user not in event.administratosrs:
+        raise HTTPException(status_code=403, detail="Operation not permitted: only event administrators can add comissioners")
+    
+    new_comissioner = db.query(user_model.User).filter(user_model.User.email == email_user).first()
+    if not new_comissioner:
+        raise HTTPException(status_code=404, detail="User Not Found")
+    
+    new_comissioner.role = UserRole.COMMISSIONER
+    db_event = db.query(event_model.Event).filter(event_model.Event.id == id_event).first()
+    if not db_event:
+        raise HTTPException(status_code=404, detail=NOT_FOUND)
+
+    db_event.comissioners.append(new_comissioner)
+
     db.commit()
     db.refresh(db_event)
 
