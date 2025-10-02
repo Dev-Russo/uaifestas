@@ -25,5 +25,11 @@ class Event(Base):
         secondary=event_administrators_table,
         back_populates="events"
     )
+    
+    commisioner = relationship(
+        "User",
+        secondary="comissioner_events",
+        back_populates="comissioned_events"
+    )
 
     products = relationship("Product", back_populates="event", cascade="all, delete-orphan")

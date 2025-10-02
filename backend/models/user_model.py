@@ -20,3 +20,5 @@ class User(Base):
         back_populates="administrators"
     )
     sales = relationship("Sale", back_populates="seller")
+
+    comissioned_events = relationship("Event", secondary="comissioner_events", back_populates="comissioners")
