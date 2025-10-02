@@ -35,6 +35,16 @@ def get_all_events(db: Session = Depends(get_db)):
     event = db.query(event_model.Event).all()
     return event
 
+@router.get("/my-events", response_model=list[event_schema.Event])
+def get_my_events(
+    db: Session = Depends(get_db),
+    current_user: user_model.User = Depends(get_current_user)
+    ):
+    events = db.query(event_model.Event).filter(
+        event_model.Event.administrators.any(id=current_user.id)
+    ).all()
+    return events
+
 @router.get("/{id_event}", response_model=event_schema.Event)
 def get_event_by_id(id_event: int, db: Session = Depends(get_db)):
     event = db.query(event_model.Event).filter(event_model.Event.id == id_event).first()
