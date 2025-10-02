@@ -170,6 +170,7 @@ def cancel_sale(
     
     
     sale.status = SaleStatus.CANCELED
+    sale.canceled_at = datetime.utcnow()
     db.commit()
     db.refresh(sale)
     
