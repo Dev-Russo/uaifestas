@@ -14,7 +14,7 @@ interface TicketData {
   name: string;
   stock: number;
   price: number;
-  // Adicione 'sold' (vendidos) se o backend retornar essa info
+  // Adicionar 'sold' (vendidos)
 }
 
 export default function GerenciarIngressosPage() {

@@ -74,7 +74,7 @@ export default function PainelDoEventoPage() {
     return <div>Evento não encontrado.</div>
   }
 
-    // Dados fictícios para os cards, substitua pelos dados reais do seu evento
+    // Dummy data
   const stats = [
     { title: "Receita Total", value: "R$ 0,00", icon: DollarSign },
     { title: "Ingressos Vendidos", value: 0, icon: Ticket },

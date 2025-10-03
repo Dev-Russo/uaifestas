@@ -4,17 +4,6 @@ import { useState, useMemo, useEffect } from 'react';
 import EventCard from '@/app/components/EventCard';
 import EventFilters from '@/app/components/EventFilters';
 
-// Dummy data (substituir por chamadas da API)
-// const EVENTOS = [
-//   { id: 1, name: 'Festival de Rock Independente', date: '15/10/2025', status: 'upcoming' as const },
-//   { id: 2, name: 'Show de Stand-up Comedy', date: '22/10/2025', status: 'upcoming' as const },
-//   { id: 3, name: 'Feira de Tecnologia e Inovação', date: '01/08/2025', status: 'past' as const },
-//   { id: 4, name: 'Concerto de Jazz & Blues', date: '05/11/2025', status: 'upcoming' as const },
-//   { id: 5, name: 'Workshop de Marketing Digital', date: '10/09/2025', status: 'past' as const },
-//   { id: 6, name: 'Festival Gastronômico Local', date: '12/12/2025', status: 'upcoming' as const },
-// ];
-
-
 export default function DashboardPage({ events }: { events: any[] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('upcoming'); // Valor padrão do filtro
