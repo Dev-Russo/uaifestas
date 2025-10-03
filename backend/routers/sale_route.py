@@ -6,7 +6,7 @@ from dependencies import get_db
 from models import user_model, sale_model, product_model, event_model
 from schemas import sale_schema
 from utils.auth_utils import get_current_user
-from utils.sale_utils import create_sale
+from utils.sale_utils import create_sale, validate_event_admin_access
 from utils.email_utils import formated_email_to_send
 from typing import Optional, List
 from enums import SaleStatus
@@ -129,8 +129,13 @@ def check_in_sale(
     current_user: user_model.User = Depends(get_current_user)
     ):
     
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Operation not permitted: only admins can check-in sales")
+    db_event = db.query(event_model.Event).join(event_model.Event.products).join(product_model.Product.sales).filter(sale_model.Sale.unique_code == unique_code).first()
+    if not db_event:
+        raise HTTPException(status_code=404, detail="Event Not Found")
+    
+    acesso = validate_event_admin_access(db, current_user, db_event.id)
+    if acesso not in ["admin", "commissioner"]:
+        raise HTTPException(status_code=403, detail="Operation not permitted: only admins and commissioners can check in sales")
     
     sale = db.query(sale_model.Sale).filter(sale_model.Sale.unique_code == unique_code).first()
     if not sale:
@@ -155,7 +160,13 @@ def cancel_sale(
     current_user: user_model.User = Depends(get_current_user)
     ):
     
-    if current_user.role != "admin":    
+    db_event = db.query(event_model.Event).join(event_model.Event.products).join(product_model.Product.sales).filter(sale_model.Sale.id == id_sale).first()
+    if not db_event:
+        raise HTTPException(status_code=404, detail="Event Not Found")
+
+    acesso = validate_event_admin_access(db, current_user, db_event.id)
+
+    if acesso != "admin":
         raise HTTPException(status_code=403, detail="Operation not permitted: only admins can cancel sales")
     
     sale = db.query(sale_model.Sale).filter(sale_model.Sale.id == id_sale).first()

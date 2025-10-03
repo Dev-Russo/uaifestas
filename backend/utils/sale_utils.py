@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from models import product_model, sale_model, user_model
+from models import product_model, sale_model, user_model, event_model
 from schemas import sale_schema
 from .qrcode_utils import generate_qrcode_image_in_memory
 from .email_utils import  formated_email_to_send
@@ -43,3 +43,16 @@ def create_sale(db: Session, sale: sale_schema.SaleCreate, seller_id: int | None
 
     
     return new_sale
+
+def validate_event_admin_access(db: Session, current_user: user_model.User, id_event: int):
+    event = db.query(event_model.Event).filter(event_model.Event.id == id_event).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event Not Found")
+    
+    if current_user in event.administrators:
+        return "admin"
+
+    if current_user in event.comissioner:
+        return "commissioner"
+    
+    raise HTTPException(status_code=403, detail="Operation not permitted: user is not an administrator or commissioner of this event")

@@ -138,20 +138,21 @@ por enquanto vai ficar assim.
 Em ambos os Metodos Abaixo.
 """
 
-@router.post("/{id_event}/add_admin/{id_user}", response_model=event_schema.Event)
+@router.post("/{id_event}/add_admin/{email_user}", response_model=event_schema.Event)
 def add_event_admin(
     id_event: int,
     email_user: str,
     db: Session = Depends(get_db),
     current_user: user_model.User = Depends(get_current_user)
 ):
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Operation not permitted: only admins can add event administrators")
-
     db_event = db.query(event_model.Event).filter(event_model.Event.id == id_event).first()
     if not db_event:
         raise HTTPException(status_code=404, detail=NOT_FOUND)
 
+    if current_user not in db_event.administrators:
+        raise HTTPException(status_code=403, detail="Operation not permitted: only admins can add event administrators")
+
+    
     new_admin = db.query(user_model.User).filter(user_model.User.email == email_user).first()
     if not new_admin:
         raise HTTPException(status_code=404, detail="User Not Found")

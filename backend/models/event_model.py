@@ -26,7 +26,7 @@ class Event(Base):
         back_populates="events"
     )
     
-    commisioner = relationship(
+    comissioner = relationship(
         "User",
         secondary="comissioner_events",
         back_populates="comissioned_events"

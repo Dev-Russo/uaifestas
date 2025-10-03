@@ -10,6 +10,7 @@ class Product(Base):
     price = Column(Float, nullable=False)
     image_url = Column(String, nullable=True)
     stock = Column(Integer, nullable=True, default=None)
+    status = Column(String, default="active", nullable=False) # active, inactive
     
     event_id = Column(Integer, ForeignKey('events.id', ondelete="CASCADE"), nullable=False)
     
