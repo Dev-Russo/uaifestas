@@ -82,7 +82,7 @@ def alter_mail_name(
     return db_sale
 
 @router.get("/", response_model=List[sale_schema.Sale])
-def get_all_sales(
+def get_all_sales_by_event(
         db: Session = Depends(get_db),
         current_user: user_model.User = Depends(get_current_user),
         event_id: int | None = None,
@@ -93,20 +93,32 @@ def get_all_sales(
     ):
     query = db.query(sale_model.Sale)
     if current_user.role == "commissioner":
-        query = query.filter(sale_model.Sale.seller_id == current_user.id)
-    
+        query = db.query(sale_model.Sale)
+        query = query.join(sale_model.Sale.product).join(product_model.Product.event)
+        query = query.filter(
+            event_model.Event.id == event_id,  
+            event_model.Event.comissioner_id == current_user.id  
+        )
+        
     elif current_user.role == "admin":
-        admin_event_ids = [event.id for event in current_user.events]
-        if not admin_event_ids:
-            return []
+        if event_id:
+            query = query.join(sale_model.Sale.product).join(product_model.Product.event)
+            
+            query = query.filter(
+                event_model.Event.id == event_id,
+                event_model.Event.comissioner_id == current_user.id 
+            )
         
-        query = query.join(sale_model.Sale.product).filter(product_model.Product.event_id.in_(admin_event_ids))
+    else:
+        admin_events_subquery = db.query(event_model.Event.id)\
+                                  .filter(event_model.Event.comissioner_id == current_user.id)\
+                                  .subquery()
+                                  
+        query = query.join(sale_model.Sale.product)\
+                     .filter(product_model.Product.event_id.in_(admin_events_subquery))
+    if seller_id:
+        query = query.filter(sale_model.Sale.seller_id == seller_id)
         
-        if seller_id:
-            query = query.filter(sale_model.Sale.seller_id == seller_id)
-        
-    if event_id:
-        query = query.join(sale_model.Sale.product).filter(product_model.Product.event_id == event_id)
     if product_id:
         query = query.filter(sale_model.Sale.product_id == product_id)
     

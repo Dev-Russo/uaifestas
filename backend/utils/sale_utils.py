@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
+from backend.enums import EventStatus
 from models import product_model, sale_model, user_model, event_model
 from schemas import sale_schema
 from .qrcode_utils import generate_qrcode_image_in_memory
@@ -13,11 +14,20 @@ def create_sale(db: Session, sale: sale_schema.SaleCreate, seller_id: int | None
     product = db.query(product_model.Product).filter(product_model.Product.id == sale.product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product Not Found")
+
+    if product.event.status != EventStatus.ACTIVE:
+        raise HTTPException(status_code=400, detail="Event is not active")
+
+    if product.stock is not None:
+        if product.stock <= 0:
+            raise HTTPException(status_code=400, detail="Product Out of Stock")
+        product.stock -= 1
     
+
     if seller_id:
-        seller = db.get(user_model.User, seller_id)
-        if not seller:
-            raise HTTPException(status_code=404, detail="Seller Not Found")
+        comissioner_check = db.query(user_model.User).filter(user_model.User.id == seller_id, user_model.User.role == "commissioner").first()
+        if not comissioner_check:
+            raise HTTPException(status_code=404, detail="Commissioner Not Found")
     else:
         seller = None
     
@@ -25,13 +35,10 @@ def create_sale(db: Session, sale: sale_schema.SaleCreate, seller_id: int | None
         product_id = sale.product_id,
         seller_id = seller_id,
         buyer_name = sale.buyer_name,
-        buyer_email = sale.buyer_email
+        buyer_email = sale.buyer_email,
+        sale_price = product.price
     )
 
-    if product.stock is not None:
-        if product.stock <= 0:
-            raise HTTPException(status_code=400, detail="Product Out of Stock")
-        product.stock -= 1
     
     db.add(new_sale)
     db.commit()
