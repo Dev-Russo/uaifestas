@@ -25,9 +25,17 @@ def create_sale(db: Session, sale: sale_schema.SaleCreate, seller_id: int | None
     
 
     if seller_id:
-        commissioner_check = db.query(user_model.User).filter(user_model.User.id == seller_id, user_model.User.role == "commissioner").first()
-        if not commissioner_check:
-            raise HTTPException(status_code=404, detail="Commissioner Not Found")
+        # Verificar se o vendedor é commissioner ou admin do evento
+        seller = db.query(user_model.User).filter(user_model.User.id == seller_id).first()
+        if not seller:
+            raise HTTPException(status_code=404, detail="Seller Not Found")
+        
+        # Permitir que tanto commissioners quanto admins façam vendas comissionadas
+        is_commissioner = seller in product.event.commissioners
+        is_admin = seller in product.event.administrators
+        
+        if not (is_commissioner or is_admin):
+            raise HTTPException(status_code=403, detail="User is not authorized to sell for this event")
     else:
         seller = None
     
