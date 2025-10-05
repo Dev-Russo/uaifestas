@@ -10,6 +10,7 @@ import {
   CheckSquare,
   DollarSign,
   HelpCircle,
+  TicketPlus,
 } from 'lucide-react';
 
 const eventNavLinks = [
@@ -20,6 +21,7 @@ const eventNavLinks = [
   { name: 'Participantes', href: '/participantes', icon: Users },
   { name: 'Check-in', href: '/check-in', icon: CheckSquare },
   { name: 'Financeiro', href: '/financeiro', icon: DollarSign },
+  { name: 'Vender Ingressos', href: '/vender-ingresso', icon: TicketPlus},
   { name: 'Ajuda', href: '/ajuda', icon: HelpCircle },
 ];
 

@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CalendarPlus, Ticket, UserCircle, LogOut } from 'lucide-react'; // Adicionei LogOut como exemplo
+import { CalendarPlus, Ticket, UserCircle, LogOut, TicketPlus } from 'lucide-react'; // Adicionei LogOut como exemplo
 import { useRouter } from 'next/navigation';
 // import Cookies from 'js-cookie'; // logout com cookie
 
