@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from database import engine
-from routers import product_route, event_route, user_route, auth_route, sale_route
+from routers import product_route, event_route, user_route, auth_route, sale_route, dashboard_route
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -48,6 +48,13 @@ app.include_router(
     prefix="/sale",
     tags=["Vendas"]
 )
+
+app.include_router(
+    dashboard_route.router,
+    prefix="/dashboard",
+    tags=["Dashboard"]
+)
+    
 
 @app.get("/")
 def read_root():

@@ -14,10 +14,11 @@ class User(Base):
     avatar_url = Column(String, nullable=True)
     created_at = Column(DateTime, nullable=False)
     
-    events = relationship("Event", back_populates="user", cascade="all, delete-orphan")
     events = relationship(
         "Event",
         secondary=event_administrators_table,
         back_populates="administrators"
     )
     sales = relationship("Sale", back_populates="seller")
+
+    commissioned_events = relationship("Event", secondary="commissioner_events", back_populates="commissioners")

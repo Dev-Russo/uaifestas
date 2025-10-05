@@ -7,6 +7,7 @@ class ProductBase(BaseModel):
     stock: Optional[int] = None
     price: float
     image_url: Optional[str] = None
+    status: str
 
 class ProductCreate(ProductBase):
     pass
