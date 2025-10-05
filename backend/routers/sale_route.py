@@ -97,7 +97,7 @@ def get_all_sales_by_event(
         query = query.join(sale_model.Sale.product).join(product_model.Product.event)
         query = query.filter(
             event_model.Event.id == event_id,  
-            event_model.Event.comissioner_id == current_user.id  
+            event_model.Event.commissioners.any(user_model.User.id == current_user.id)  
         )
         
     elif current_user.role == "admin":
@@ -106,12 +106,12 @@ def get_all_sales_by_event(
             
             query = query.filter(
                 event_model.Event.id == event_id,
-                event_model.Event.comissioner_id == current_user.id 
+                event_model.Event.commissioners.any(user_model.User.id == current_user.id) 
             )
         
     else:
         admin_events_subquery = db.query(event_model.Event.id)\
-                                  .filter(event_model.Event.comissioner_id == current_user.id)\
+                                  .filter(event_model.Event.commissioners.any(user_model.User.id == current_user.id))\
                                   .subquery()
                                   
         query = query.join(sale_model.Sale.product)\

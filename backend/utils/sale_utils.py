@@ -25,8 +25,8 @@ def create_sale(db: Session, sale: sale_schema.SaleCreate, seller_id: int | None
     
 
     if seller_id:
-        comissioner_check = db.query(user_model.User).filter(user_model.User.id == seller_id, user_model.User.role == "commissioner").first()
-        if not comissioner_check:
+        commissioner_check = db.query(user_model.User).filter(user_model.User.id == seller_id, user_model.User.role == "commissioner").first()
+        if not commissioner_check:
             raise HTTPException(status_code=404, detail="Commissioner Not Found")
     else:
         seller = None
@@ -59,7 +59,7 @@ def validate_event_admin_access(db: Session, current_user: user_model.User, id_e
     if current_user in event.administrators:
         return "admin"
 
-    if current_user in event.comissioner:
+    if current_user in event.commissioners:
         return "commissioner"
     
     raise HTTPException(status_code=403, detail="Operation not permitted: user is not an administrator or commissioner of this event")

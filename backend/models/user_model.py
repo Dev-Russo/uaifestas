@@ -21,4 +21,4 @@ class User(Base):
     )
     sales = relationship("Sale", back_populates="seller")
 
-    comissioned_events = relationship("Event", secondary="comissioner_events", back_populates="comissioners")
+    commissioned_events = relationship("Event", secondary="commissioner_events", back_populates="commissioners")

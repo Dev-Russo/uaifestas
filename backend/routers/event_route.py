@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from utils.auth_utils import get_current_user
-from models import user_model
-from dependencies import get_db
-from models import event_model
+from models import user_model, event_model
 from schemas import event_schema, product_schema
 from enums import UserRole
+from dependencies import get_db
 
 NOT_FOUND = "Event Not Found"
 
@@ -138,7 +137,7 @@ por enquanto vai ficar assim.
 Em ambos os Metodos Abaixo.
 """
 
-@router.post("/{id_event}/add_admin/{email_user}", response_model=event_schema.Event)
+@router.post("/{id_event}/add_admin", response_model=event_schema.Event)
 def add_event_admin(
     id_event: int,
     email_user: str,
@@ -169,8 +168,8 @@ def add_event_admin(
     return db_event
 
 
-@router.post("/{id_event}/comissioners", response_model=event_schema.Event)
-def create_commisioner_for_event(
+@router.post("/{id_event}/commissioners", response_model=event_schema.Event)
+def create_commissioner_for_event(
     id_event: int,
     email_user: str,
     db: Session = Depends(get_db),
@@ -180,19 +179,19 @@ def create_commisioner_for_event(
     if not event:
         raise HTTPException(status_code=404, detail=NOT_FOUND)
     
-    if current_user not in event.administratosrs:
-        raise HTTPException(status_code=403, detail="Operation not permitted: only event administrators can add comissioners")
+    if current_user not in event.administrators:
+        raise HTTPException(status_code=403, detail="Operation not permitted: only event administrators can add commissioners")
     
-    new_comissioner = db.query(user_model.User).filter(user_model.User.email == email_user).first()
-    if not new_comissioner:
+    new_commissioner = db.query(user_model.User).filter(user_model.User.email == email_user).first()
+    if not new_commissioner:
         raise HTTPException(status_code=404, detail="User Not Found")
     
-    new_comissioner.role = UserRole.COMMISSIONER
+    new_commissioner.role = UserRole.COMMISSIONER
     db_event = db.query(event_model.Event).filter(event_model.Event.id == id_event).first()
     if not db_event:
         raise HTTPException(status_code=404, detail=NOT_FOUND)
 
-    db_event.comissioners.append(new_comissioner)
+    db_event.commissioners.append(new_commissioner)
 
     db.commit()
     db.refresh(db_event)

@@ -26,10 +26,10 @@ class Event(Base):
         back_populates="events"
     )
     
-    comissioner = relationship(
+    commissioners = relationship(
         "User",
-        secondary="comissioner_events",
-        back_populates="comissioned_events"
+        secondary="commissioner_events",
+        back_populates="commissioned_events"
     )
 
     products = relationship("Product", back_populates="event", cascade="all, delete-orphan")

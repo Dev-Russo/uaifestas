@@ -23,7 +23,7 @@ def get_event_dashboard(
     if not event:
         raise HTTPException(status_code=404, detail="Event Not Found")
     
-    if current_user.role != "admin" or current_user not in event.administrators:
+    if current_user.role != "admin" and current_user not in event.administrators and current_user not in event.commissioners:
         raise HTTPException(status_code=403, detail="Operation not permitted")
     
     end_date = datetime.utcnow()
@@ -31,12 +31,53 @@ def get_event_dashboard(
     
     stats = get_statistics(db, event_id, start_date.date(), end_date.date(), current_user)
     
+    # Get additional event statistics
+    total_products = db.query(func.count(product_model.Product.id)).filter(
+        product_model.Product.event_id == event_id
+    ).scalar()
+    
+    total_sellers = db.query(func.count(func.distinct(sale_model.Sale.seller_id))).filter(
+        sale_model.Sale.product_id.in_(
+            db.query(product_model.Product.id).filter(product_model.Product.event_id == event_id)
+        )
+    ).scalar()
+    
+    # Calculate sales metrics for the period
+    paid_sales = stats["total_sales"]
+    canceled_sales = stats["total_canceled"]
+    total_revenue = stats["total_revenue"]
+    
+    # Calculate growth percentages (simplified - would need previous period data)
+    sales_growth_percentage = None  # Would need to implement comparison with previous period
+    revenue_growth_percentage = None  # Would need to implement comparison with previous period
+    
+    sales_metrics = dashboard_schema.SaleMetrics(
+        total_sales=paid_sales + canceled_sales,
+        total_revenue=total_revenue,
+        average_ticket=stats["avg_sale_value"],
+        paid_sales=paid_sales,
+        canceled_sales=canceled_sales,
+        today_sales=0,  # Would need to implement daily calculations
+        today_revenue=0.0,  # Would need to implement daily calculations
+        week_sales=0,  # Would need to implement weekly calculations
+        week_revenue=0.0,  # Would need to implement weekly calculations
+        month_sales=paid_sales,  # Using current period as month
+        month_revenue=total_revenue,  # Using current period as month
+        sales_growth_percentage=sales_growth_percentage,
+        revenue_growth_percentage=revenue_growth_percentage
+    )
     
     dashboard = dashboard_schema.EventDashboard(
-        total_sales=stats["total_sales"],
-        total_revenue=stats["total_revenue"],
-        avg_sale_value=stats["avg_sale_value"],
-        total_products=stats["total_products"]
+        event_id=event.id,
+        event_name=event.name,
+        event_status=event.status,
+        event_date=event.event_date,
+        created=event.created,
+        sales_metrics=sales_metrics,
+        product_stats=[],  # Would need to implement product statistics
+        seller_stats=[],  # Would need to implement seller statistics
+        top_products=[],  # Would need to implement top products
+        analysis_period_days=str(days)
     )
     
     return dashboard
