@@ -8,11 +8,19 @@ interface CreateTicketModalProps {
   onTicketCreated: () => void; // recarregar a lista de ingressos
 }
 
+const TicketStatus ={
+  ACTIVE: "active",
+  INACTIVE: "inactive",
+  OUT_OF_STOCK: "out_of_stock",
+  ULIMITED_PRODUCT: "unlimited_product",
+};
+
 export default function CreateTicketModal({ isOpen, onClose, eventId, onTicketCreated }: CreateTicketModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [stock, setStock] = useState(0);
   const [price, setPrice] = useState(0);
+  const [status, setStatus] = useState<'active' | 'inactive'>('active');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -31,6 +39,7 @@ export default function CreateTicketModal({ isOpen, onClose, eventId, onTicketCr
       description,
       stock,
       price,
+      status: status,
       image_url: "" // Enviando um valor dummy como placeholder
     };
 
@@ -72,6 +81,30 @@ export default function CreateTicketModal({ isOpen, onClose, eventId, onTicketCr
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome do Ingresso (ex: Lote 1)</label>
             <input type="text" id="name" value={name} onChange={e => setName(e.target.value)} required className="mt-1 block w-full rounded-md dark:bg-neutral-700 border-gray-300 shadow-sm" />
           </div>
+          {/* Botão Toggle */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Status do Ingresso</label>
+            <div className="mt-2 flex items-center gap-4">
+              <button
+                type="button" // Importante para não submeter o formulário
+                onClick={() => setStatus(status === 'active' ? 'inactive' : 'active')}
+                className={`${
+                  status === 'active' ? 'bg-green-600' : 'bg-gray-400 dark:bg-neutral-600'
+                } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`${
+                    status === 'active' ? 'translate-x-5' : 'translate-x-0'
+                  } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                />
+              </button>
+              <span className="text-sm font-medium text-gray-900 dark:text-gray-200 capitalize">
+                {status === 'active' ? 'Ativo' : 'Inativo'}
+              </span>
+            </div>
+          </div>
+
           <div>
             <label htmlFor="stock" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Quantidade Disponível</label>
             <input type="number" id="stock" value={stock} onChange={e => setStock(parseInt(e.target.value, 10))} required className="mt-1 block w-full rounded-md dark:bg-neutral-700 border-gray-300 shadow-sm" />

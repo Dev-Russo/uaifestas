@@ -14,6 +14,7 @@ interface TicketData {
   name: string;
   stock: number;
   price: number;
+  status: 'active' | 'inactive';
   // Adicionar 'sold' (vendidos)
 }
 
@@ -76,6 +77,7 @@ export default function GerenciarIngressosPage() {
             <thead className="bg-gray-50 dark:bg-neutral-900">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vendido / Total</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Preço</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
@@ -89,6 +91,22 @@ export default function GerenciarIngressosPage() {
               ) : tickets.map((ticket) => (
                 <tr key={ticket.id}>
                   <td className="px-6 py-4 whitespace-nowrap font-medium">{ticket.name}</td>
+
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        ticket.status === 'active' 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                        : 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-gray-300'
+                    }`}>
+                      <svg className={`-ml-0.5 mr-1.5 h-2 w-2 ${
+                          ticket.status === 'active' ? 'text-green-400' : 'text-gray-400'
+                      }`} fill="currentColor" viewBox="0 0 8 8">
+                        <circle cx={4} cy={4} r={3} />
+                      </svg>
+                      {ticket.status === 'active' ? 'Ativo' : 'Inativo'}
+                    </span>
+                  </td>
+
                   <td className="px-6 py-4 whitespace-nowrap">{`0 / ${ticket.stock}`}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{`R$ ${ticket.price.toFixed(2)}`}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

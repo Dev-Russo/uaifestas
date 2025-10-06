@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from backend.enums import EventStatus
+from enums import EventStatus
 from models import product_model, sale_model, user_model, event_model
 from schemas import sale_schema
 from .qrcode_utils import generate_qrcode_image_in_memory
