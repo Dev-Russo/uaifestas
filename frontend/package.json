@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@yudiel/react-qr-scanner": "^2.3.1",
     "date-fns": "^4.1.0",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.544.0",
