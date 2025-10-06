@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-// 1. A importação correta é 'Scanner' (e a tipagem para o resultado)
 import { Scanner, IDetectedBarcode } from '@yudiel/react-qr-scanner';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
@@ -16,7 +15,6 @@ export default function ValidarQrcodePage() {
   const [validationResult, setValidationResult] = useState<ValidationResult>(null);
   const [isLoading, setIsLoading] = useState(false);
   
-  // A lógica de validação no backend continua a mesma
   const validateCodeOnBackend = async (uniqueCode: string) => {
     setIsLoading(true);
     setValidationResult({ status: 'info', message: `Código lido. Validando...` });
@@ -37,9 +35,8 @@ export default function ValidarQrcodePage() {
     }
   };
 
-  // 2. A função agora recebe um array 'detectedCodes'
   const handleScan = (detectedCodes: IDetectedBarcode[]) => {
-    // 3. Pegamos o primeiro código detectado e seu valor 'rawValue'
+    //  Pegamos o primeiro código detectado e seu valor 'rawValue'
     if (detectedCodes.length > 0 && !isLoading) {
       const scannedCode = detectedCodes[0].rawValue;
       validateCodeOnBackend(scannedCode);
@@ -56,11 +53,10 @@ export default function ValidarQrcodePage() {
             container: { width: '100%', height: '100%', paddingTop: '0' },
             video: { objectFit: 'cover' },
         }}
-        // 'constraints' foi substituído por 'videoConstraints' em versões mais recentes
         constraints={{ facingMode: 'environment' }}
       />
 
-      {/* O Overlay e o Banner de Resultado (sem alterações) */}
+      {/* O Overlay e o Banner de Resultado */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         <button 
           onClick={() => router.back()} 
